@@ -35,6 +35,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.InsertManyOptions;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import site.ycsb.ByteArrayByteIterator;
@@ -77,6 +78,9 @@ public class MongoDbClient extends DB {
 
   /** The options to use for inserting a single document. */
   private static final UpdateOptions UPDATE_WITH_UPSERT = new UpdateOptions()
+      .upsert(true);
+
+  private static final ReplaceOptions REPLACE_WITH_UPSERT = new ReplaceOptions()
       .upsert(true);
 
   /**
@@ -257,7 +261,7 @@ public class MongoDbClient extends DB {
       MongoCollection<Document> collection = database.getCollection(table);
       Document toInsert = new Document("_id", key);
       for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-        toInsert.put(entry.getKey(), entry.getValue().toArray());
+        toInsert.put(entry.getKey(), entry.getValue().toString());
       }
 
       if (batchSize == 1) {
@@ -266,7 +270,7 @@ public class MongoDbClient extends DB {
           // to current inability of the framework to clean up after itself
           // between test runs.
           collection.replaceOne(new Document("_id", toInsert.get("_id")),
-              toInsert, UPDATE_WITH_UPSERT);
+              toInsert, REPLACE_WITH_UPSERT);
         } else {
           collection.insertOne(toInsert);
         }
@@ -436,7 +440,7 @@ public class MongoDbClient extends DB {
       Document query = new Document("_id", key);
       Document fieldsToSet = new Document();
       for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-        fieldsToSet.put(entry.getKey(), entry.getValue().toArray());
+        fieldsToSet.put(entry.getKey(), entry.getValue().toString());
       }
       Document update = new Document("$set", fieldsToSet);
 
